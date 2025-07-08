@@ -23,13 +23,9 @@ export const handleErrorApi = ({
   setError?: UseFormSetError<any>;
   duration?: number;
 }) => {
-  if (error instanceof EntityError && setError) {
-    const errors = error?.payload?.errors;
-    errors.forEach((item) => {
-      setError(item.fields, {
-        type: "server",
-        message: item.message,
-      });
+  if (error && setError) {
+    error?.errors.forEach((item: any) => {
+      setError(item.field as any, { message: item.message });
     });
   } else {
     toast.error("Lỗi", {

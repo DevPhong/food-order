@@ -31,17 +31,13 @@ export async function POST(request: Request) {
       secure: true,
       expires: new Date(decodedRefreshToken.exp * 1000),
     });
-
     return Response.json(payload);
   } catch (error) {
+    // Handle error from API
     if (error instanceof HttpError) {
-      console.log("err", error);
-      return (
-        Response.json(error.payload),
-        {
-          status: error.status,
-        }
-      );
+      return Response.json(error.payload, {
+        status: error.status,
+      });
     } else {
       return Response.json({ message: "Có lỗi xảy ra" }, { status: 500 });
     }

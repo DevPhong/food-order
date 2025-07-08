@@ -13,12 +13,13 @@ import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { LoginBody, LoginBodyType } from "@/schemaValidations/auth.schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuthLoginMutation } from "@/queries/useAuth";
+import { useLoginMutation } from "@/queries/useAuth";
 import { toast } from "sonner";
 import { handleErrorApi } from "@/lib/utils";
+import { EntityError } from "@/lib/http";
 
 export default function LoginForm() {
-  const loginMutation = useAuthLoginMutation();
+  const loginMutation = useLoginMutation();
 
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
@@ -31,16 +32,20 @@ export default function LoginForm() {
   const onSubmit = async (data: LoginBodyType) => {
     if (loginMutation.isPending) return;
     try {
-      const result = await loginMutation.mutateAsync(data);
-      toast("Thành công", {
-        description: result.payload.message,
+      const res = await loginMutation.mutateAsync(data);
+      toast.success("Thành công", {
+        description: res?.payload?.message,
       });
-    } catch (error: any) {
-      console.log(error);
-      handleErrorApi({
-        error,
-        setError: form.setError,
-      });
+    } catch (error) {
+      // Lấy thông tin lỗi từ response
+      if (error instanceof EntityError) {
+        // Lấy mảng lỗi từng field (nếu có)
+        // Handle error from API
+        handleErrorApi({
+          error: error.payload,
+          setError: form.setError,
+        });
+      }
     }
   };
 
@@ -57,9 +62,7 @@ export default function LoginForm() {
           <form
             className="space-y-2 max-w-[600px] flex-shrink-0 w-full"
             noValidate
-            onSubmit={form.handleSubmit(onSubmit, (err) => {
-              console.log(err);
-            })}
+            onSubmit={form.handleSubmit(onSubmit)}
           >
             <div className="grid gap-4">
               <FormField
