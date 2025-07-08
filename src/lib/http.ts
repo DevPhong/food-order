@@ -58,7 +58,6 @@ export class EntityError extends HttpError {
 
 let clientLogoutRequest: null | Promise<any> = null;
 const isClient = typeof window !== "undefined";
-
 const request = async <Response>(
   method: "GET" | "POST" | "PUT" | "DELETE",
   url: string,
@@ -69,7 +68,7 @@ const request = async <Response>(
   if (options?.body instanceof FormData) {
     body = options.body;
   } else if (options?.body) {
-    body = JSON.stringify(options?.body);
+    body = JSON.stringify(options.body);
   }
 
   const baseHeaders: { [key: string]: string } =
@@ -106,7 +105,6 @@ const request = async <Response>(
   });
 
   const payload: Response = await res.json();
-
   const data = {
     status: res.status,
     payload,
@@ -149,7 +147,7 @@ const request = async <Response>(
         const accessToken = (options?.headers as any)?.Authorization.split(
           "Bearer "
         )[1];
-        redirect(`/logout?sessionToken=${accessToken}`);
+        redirect(`/logout?accessToken=${accessToken}`);
       }
     } else {
       throw new HttpError(data);

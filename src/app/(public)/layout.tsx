@@ -30,7 +30,7 @@ export default function Layout({
           </Link>
           <NavItems className="text-muted-foreground transition-colors hover:text-foreground flex-shrink-0" />
         </nav>
-        <Sheet>
+        {/* <Sheet>
           <SheetTrigger asChild>
             <Button
               variant="outline"
@@ -58,7 +58,7 @@ export default function Layout({
               <NavItems className="text-muted-foreground transition-colors hover:text-foreground" />
             </nav>
           </SheetContent>
-        </Sheet>
+        </Sheet> */}
         <div className="ml-auto">
           <DarkModeToggle />
         </div>
