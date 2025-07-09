@@ -34,3 +34,9 @@ export const handleErrorApi = ({
     });
   }
 };
+
+export const getAccessTokenFromLocalStorage = () =>
+  localStorage.getItem("accessToken");
+
+export const getRefreshTokenFromLocalStorage = () =>
+  localStorage.getItem("refreshToken");
