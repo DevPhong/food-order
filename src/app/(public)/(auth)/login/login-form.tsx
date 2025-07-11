@@ -17,10 +17,11 @@ import { useLoginMutation } from "@/queries/useAuth";
 import { toast } from "sonner";
 import { handleErrorApi } from "@/lib/utils";
 import { EntityError } from "@/lib/http";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const loginMutation = useLoginMutation();
-
+  const router = useRouter();
   const form = useForm<LoginBodyType>({
     resolver: zodResolver(LoginBody),
     defaultValues: {
@@ -36,6 +37,7 @@ export default function LoginForm() {
       toast.success("Thành công", {
         description: res?.payload?.message,
       });
+      router.push("/manage/dashboard");
     } catch (error) {
       // Lấy thông tin lỗi từ response
       if (error instanceof EntityError) {
