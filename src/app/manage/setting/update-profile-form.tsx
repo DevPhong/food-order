@@ -13,12 +13,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAccountProfile } from "@/queries/useAccount";
+import { useAccountProfile, useUpdateMeMutation } from "@/queries/useAccount";
+import mediaApiRequest from "@/apiRequest/media";
+import { handleErrorApi } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function UpdateProfileForm() {
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
-  const { data } = useAccountProfile();
+  const { data, refetch } = useAccountProfile();
+  const updateMeMutation = useUpdateMeMutation();
   const form = useForm<UpdateMeBodyType>({
     resolver: zodResolver(UpdateMeBody),
     defaultValues: {
@@ -35,7 +39,7 @@ export default function UpdateProfileForm() {
         avatar: avatar ?? undefined,
       });
     }
-  }, [data]);
+  }, [data, form]);
 
   const avatar = form.watch("avatar");
   const name = form.watch("name");
@@ -45,13 +49,63 @@ export default function UpdateProfileForm() {
       return URL.createObjectURL(file);
     }
     return avatar;
-  }, [file]);
+  }, [file, avatar]);
+
+  const reset = () => {
+    setFile(null);
+    if (avatarInputRef.current) {
+      avatarInputRef.current.value = "";
+    }
+    // Reset về data gốc thay vì empty values
+    if (data) {
+      const { name, avatar } = data.payload.data;
+      form.reset({
+        name,
+        avatar: avatar ?? undefined,
+      });
+    } else {
+      form.reset();
+    }
+  };
+
+  const onSubmit = async (values: UpdateMeBodyType) => {
+    if (updateMeMutation.isPending) return;
+    try {
+      let body = values;
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadedAvatar = await mediaApiRequest.upload(formData);
+        const imageUrl = uploadedAvatar.payload.data;
+        body = {
+          ...values,
+          avatar: imageUrl,
+        };
+      }
+      const result = await updateMeMutation.mutateAsync(body);
+      toast.success(result.payload.message);
+      setFile(null); // Clear file sau khi upload thành công
+      if (avatarInputRef.current) {
+        avatarInputRef.current.value = "";
+      }
+      refetch();
+    } catch (error) {
+      if (error) {
+        handleErrorApi({
+          error,
+          setError: form.setError,
+        });
+      }
+    }
+  };
 
   return (
     <Form {...form}>
       <form
         noValidate
         className="grid auto-rows-max items-start gap-4 md:gap-8"
+        onReset={reset}
+        onSubmit={form.handleSubmit(onSubmit)}
       >
         <Card x-chunk="dashboard-07-chunk-0">
           <CardHeader>
@@ -80,6 +134,7 @@ export default function UpdateProfileForm() {
                           const selectedFile = e.target.files?.[0];
                           if (selectedFile) {
                             setFile(selectedFile);
+                            // Không cần set placeholder URL, sẽ được set khi submit
                           }
                         }}
                       />
@@ -92,26 +147,6 @@ export default function UpdateProfileForm() {
                         <span className="sr-only">Upload</span>
                       </button>
                     </div>
-                    {/* {file && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                        <span>Đã chọn: {file.name}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-auto p-1 text-red-500 hover:text-red-700"
-                          onClick={() => {
-                            setFile(null);
-                            field.onChange("");
-                            if (avatarInputRef.current) {
-                              avatarInputRef.current.value = "";
-                            }
-                          }}
-                        >
-                          Xóa
-                        </Button>
-                      </div>
-                    )} */}
                   </FormItem>
                 )}
               />
@@ -136,11 +171,21 @@ export default function UpdateProfileForm() {
               />
 
               <div className=" items-center gap-2 md:ml-auto flex">
-                <Button variant="outline" size="sm" type="reset">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  onClick={reset}
+                  disabled={updateMeMutation.isPending}
+                >
                   Hủy
                 </Button>
-                <Button size="sm" type="submit">
-                  Lưu thông tin
+                <Button
+                  size="sm"
+                  type="submit"
+                  disabled={updateMeMutation.isPending}
+                >
+                  {updateMeMutation.isPending ? "Đang lưu..." : "Lưu thông tin"}
                 </Button>
               </div>
             </div>
