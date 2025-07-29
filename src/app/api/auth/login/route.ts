@@ -1,8 +1,8 @@
 import authApiRequest from "@/apiRequest/auth";
-import { LoginBodyType } from "@/schemaValidations/auth.schema";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
 import { HttpError } from "@/lib/http";
+import { LoginBodyType } from "@/schemaValidations/auth.schema";
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
   // Handle POST request
