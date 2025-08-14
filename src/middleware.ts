@@ -10,13 +10,13 @@ export function middleware(request: NextRequest) {
   const refreshToken = request.cookies.get("refreshToken")?.value;
 
   // Nếu chưa đăng nhập thì không cho private paths
-  if (privatePaths.some((path) => pathname.startsWith(path)) && !accessToken) {
+  if (privatePaths.some((path) => pathname.startsWith(path)) && !refreshToken) {
     const url = new URL("/login", request.url);
     return NextResponse.redirect(url);
   }
 
   // Đăng nhập rồi thì không vào login
-  if (unAuthPaths.some((path) => pathname.startsWith(path)) && accessToken) {
+  if (unAuthPaths.some((path) => pathname.startsWith(path)) && refreshToken) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -26,8 +26,9 @@ export function middleware(request: NextRequest) {
     !accessToken &&
     refreshToken
   ) {
-    const url = new URL("/logout", request.url);
+    const url = new URL("/refresh-token", request.url);
     url.searchParams.set("refreshToken", refreshToken);
+    url.searchParams.set("redirect", pathname);
     return NextResponse.redirect(url);
   }
   return NextResponse.next();
